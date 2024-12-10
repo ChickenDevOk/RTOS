@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/theme/black.css">
+  <style>
+    .reveal section {
+      text-align: left;
+    }
+    .reveal pre {
+      width: 100%;
+      font-size: 0.8em;
+    }
+    .reveal h1 {
+      font-size: 2.2em;
+    }
+    .reveal h2 {
+      font-size: 1.8em;
+    }
+    .highlight {
+      color: #42affa;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Slide 1 -->
+      <section>
+        <h1>Lập Trình C Nâng Cao cho Embedded Systems</h1>
+        <p>Khóa học chuyên sâu về C trong hệ thống nhúng</p>
+      </section>
+
+      <!-- Slide 2 -->
+      <section>
+        <h2>Nội Dung Khóa Học</h2>
+        <ul>
+          <li>Pointer và Memory Management</li>
+          <li>Volatile & Const Qualifiers</li>
+          <li>Interrupt Handling</li>
+          <li>Bit Manipulation</li>
+          <li>Structure và Union trong Embedded</li>
+          <li>Real-time Programming</li>
+        </ul>
+      </section>
+
+      <!-- Slide 3 -->
+      <section>
+        <h2>1. Pointer và Memory Management</h2>
+        <ul>
+          <li>Pointer to specific memory addresses</li>
+          <li>Memory mapped I/O</li>
+          <li>Direct register access</li>
+        </ul>
+        <pre><code class="c">
+volatile uint32_t* port = (uint32_t*)0x40020000;
+*port = 0x00000001; // Set pin high
+        </code></pre>
+      </section>
+
+      <!-- Slide 4 -->
+      <section>
+        <h2>2. Volatile & Const Qualifiers</h2>
+        <ul>
+          <li>Volatile: Prevent optimization</li>
+          <li>Const: Read-only data in ROM</li>
+        </ul>
+        <pre><code class="c">
+volatile uint8_t status_reg;  // Hardware register
+const uint8_t VERSION = 0x01; // ROM constant
+        </code></pre>
+      </section>
+
+      <!-- Slide 5 -->
+      <section>
+        <h2>3. Interrupt Handling</h2>
+        <ul>
+          <li>ISR (Interrupt Service Routines)</li>
+          <li>Interrupt vectors</li>
+          <li>Priority levels</li>
+        </ul>
+        <pre><code class="c">
+void __interrupt__ timer0_isr(void) {
+  if(PIR1bits.TMR0IF) {
+      // Handle interrupt
+      PIR1bits.TMR0IF = 0;
+  }
+}
+        </code></pre>
+      </section>
+
+      <!-- Slide 6 -->
+      <section>
+        <h2>4. Bit Manipulation</h2>
+        <ul>
+          <li>Bitwise operations</li>
+          <li>Bit fields</li>
+          <li>Bit masks</li>
+        </ul>
+        <pre><code class="c">
+// Set bit 3
+PORTA |= (1 << 3);
+// Clear bit 3
+PORTA &= ~(1 << 3);
+// Toggle bit 3
+PORTA ^= (1 << 3);
+        </code></pre>
+      </section>
+
+      <!-- Slide 7 -->
+      <section>
+        <h2>5. Structure và Union trong Embedded</h2>
+        <ul>
+          <li>Bit fields trong struct</li>
+          <li>Packed structures</li>
+          <li>Memory alignment</li>
+        </ul>
+        <pre><code class="c">
+typedef struct {
+  unsigned int flag1 : 1;
+  unsigned int flag2 : 1;
+  unsigned int data  : 6;
+} __attribute__((packed)) StatusReg;
+        </code></pre>
+      </section>
+
+      <!-- Slide 8 -->
+      <section>
+        <h2>6. Real-time Programming</h2>
+        <ul>
+          <li>Task scheduling</li>
+          <li>Timer management</li>
+          <li>Event handling</li>
+        </ul>
+        <pre><code class="c">
+void main(void) {
+  while(1) {
+      if(timer_expired()) {
+          process_tasks();
+          reset_timer();
+      }
+  }
+}
+        </code></pre>
+      </section>
+
+      <!-- Slide 9 -->
+      <section>
+        <h2>Best Practices</h2>
+        <ul>
+          <li>Sử dụng const khi có thể</li>
+          <li>Tránh dynamic memory allocation</li>
+          <li>ISR phải ngắn gọn và nhanh</li>
+          <li>Sử dụng volatile đúng cách</li>
+          <li>Kiểm tra boundary conditions</li>
+          <li>Code phải portable và maintainable</li>
+        </ul>
+      </section>
+
+      <!-- Slide 10 -->
+      <section>
+        <h2>Tài Liệu Tham Khảo</h2>
+        <ul>
+          <li>Making Embedded Systems - Elecia White</li>
+          <li>Programming Embedded Systems - Michael Barr</li>
+          <li>C Programming for Embedded Systems - Kirk Zurell</li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      controls: true,
+      progress: true,
+      center: false,
+      hash: true
+    });
+  </script>
+</body>
+</html>

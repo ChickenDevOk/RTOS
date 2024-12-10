@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/theme/white.css">
+  <style>
+    .reveal section img {
+      border: none;
+      box-shadow: none;
+    }
+    .reveal h1 {
+      color: #2c3e50;
+    }
+    .reveal h2 {
+      color: #34495e;
+    }
+    .reveal li {
+      margin: 15px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Slide 1 -->
+      <section>
+        <h1>Linux Kernel</h1>
+        <h3>Giới thiệu về nhân hệ điều hành Linux</h3>
+      </section>
+
+      <!-- Slide 2 -->
+      <section>
+        <h2>Linux Kernel là gì?</h2>
+        <ul>
+          <li>Là thành phần cốt lõi của hệ điều hành Linux</li>
+          <li>Quản lý tài nguyên phần cứng và phần mềm</li>
+          <li>Cầu nối giữa phần cứng và ứng dụng người dùng</li>
+          <li>Mã nguồn mở, được phát triển bởi cộng đồng</li>
+        </ul>
+      </section>
+
+      <!-- Slide 3 -->
+      <section>
+        <h2>Chức năng chính</h2>
+        <ul>
+          <li>Quản lý bộ nhớ (Memory Management)</li>
+          <li>Lập lịch tiến trình (Process Scheduling)</li>
+          <li>Quản lý thiết bị (Device Management)</li>
+          <li>Hệ thống tập tin (File Systems)</li>
+          <li>Quản lý mạng (Network Stack)</li>
+        </ul>
+      </section>
+
+      <!-- Slide 4 -->
+      <section>
+        <h2>Kiến trúc Linux Kernel</h2>
+        <ul>
+          <li>Monolithic Kernel</li>
+          <li>Kernel Space vs User Space</li>
+          <li>System Calls</li>
+          <li>Kernel Modules</li>
+        </ul>
+      </section>
+
+      <!-- Slide 5 -->
+      <section>
+        <h2>Kernel Space vs User Space</h2>
+        <ul>
+          <li>Kernel Space: Quyền truy cập hoàn toàn vào phần cứng</li>
+          <li>User Space: Môi trường cho ứng dụng người dùng</li>
+          <li>System Calls: Giao diện giữa User Space và Kernel Space</li>
+        </ul>
+      </section>
+
+      <!-- Slide 6 -->
+      <section>
+        <h2>Kernel Modules</h2>
+        <ul>
+          <li>Mở rộng chức năng kernel không cần biên dịch lại</li>
+          <li>Có thể tải và gỡ bỏ động</li>
+          <li>Ví dụ: Device drivers, File systems, Network protocols</li>
+        </ul>
+      </section>
+
+      <!-- Slide 7 -->
+      <section>
+        <h2>Process Management</h2>
+        <ul>
+          <li>Tạo và hủy tiến trình</li>
+          <li>Lập lịch CPU</li>
+          <li>Inter-Process Communication (IPC)</li>
+          <li>Thread management</li>
+        </ul>
+      </section>
+
+      <!-- Slide 8 -->
+      <section>
+        <h2>Memory Management</h2>
+        <ul>
+          <li>Virtual Memory</li>
+          <li>Page Tables</li>
+          <li>Memory Allocation</li>
+          <li>Swap Space Management</li>
+        </ul>
+      </section>
+
+      <!-- Slide 9 -->
+      <section>
+        <h2>File System</h2>
+        <ul>
+          <li>Virtual File System (VFS)</li>
+          <li>Hỗ trợ nhiều loại file system</li>
+          <li>Buffer Cache</li>
+          <li>I/O Scheduling</li>
+        </ul>
+      </section>
+
+      <!-- Slide 10 -->
+      <section>
+        <h2>Security</h2>
+        <ul>
+          <li>Access Control</li>
+          <li>Security Modules (SELinux, AppArmor)</li>
+          <li>Capabilities</li>
+          <li>Cryptographic API</li>
+        </ul>
+      </section>
+
+      <!-- Slide 11 -->
+      <section>
+        <h2>Tài liệu tham khảo</h2>
+        <ul>
+          <li>The Linux Kernel Documentation (kernel.org)</li>
+          <li>Linux Kernel Development (Robert Love)</li>
+          <li>Understanding the Linux Kernel (O'Reilly)</li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      controls: true,
+      progress: true,
+      center: true,
+      hash: true
+    });
+  </script>
+</body>
+</html>

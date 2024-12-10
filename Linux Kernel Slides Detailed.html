@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/theme/white.css">
+  <style>
+    .reveal section img {
+      border: none;
+      box-shadow: none;
+    }
+    .reveal h1 { color: #2c3e50; }
+    .reveal h2 { color: #34495e; }
+    .reveal li { margin: 12px 0; }
+    .reveal pre { font-size: 0.75em; }
+    .example { 
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    .note {
+      font-size: 0.8em;
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Slide 1 -->
+      <section>
+        <h1>Linux Kernel</h1>
+        <h3>Giới thiệu chi tiết về nhân hệ điều hành Linux</h3>
+        <p class="note">Version: 6.x</p>
+      </section>
+
+      <!-- Slide 2 -->
+      <section>
+        <h2>Linux Kernel là gì?</h2>
+        <ul>
+          <li>Là phần core của hệ điều hành Linux</li>
+          <li>Được viết chủ yếu bằng C và Assembly</li>
+          <li>Được phát triển bởi Linus Torvalds năm 1991</li>
+          <li>Phiên bản hiện tại: 6.x</li>
+        </ul>
+        <div class="example">
+          <p><strong>Ví dụ:</strong> Khi bạn cắm USB vào máy tính:</p>
+          <ol>
+            <li>Kernel phát hiện thiết bị mới</li>
+            <li>Tải driver phù hợp</li>
+            <li>Mount thiết bị vào hệ thống file</li>
+            <li>Thông báo cho user space</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- Slide 3 -->
+      <section>
+        <h2>Chức năng chính của Kernel</h2>
+        <ul>
+          <li><strong>Process Management:</strong>
+            <ul>
+              <li>Tạo process với fork(): <code>pid = fork()</code></li>
+              <li>Lập lịch CPU với nice value: <code>nice -n 10 ./program</code></li>
+            </ul>
+          </li>
+          <li><strong>Memory Management:</strong>
+            <ul>
+              <li>Cấp phát bộ nhớ: <code>malloc(1024)</code></li>
+              <li>Quản lý virtual memory: <code>/proc/meminfo</code></li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Slide 4 -->
+      <section>
+        <h2>System Calls</h2>
+        <p>Giao diện giữa user space và kernel space</p>
+        <div class="example">
+          <p><strong>Ví dụ về System Calls phổ biến:</strong></p>
+          <pre><code>
+// Mở file
+int fd = open("file.txt", O_RDONLY);
+
+// Đọc file
+char buffer[1024];
+read(fd, buffer, 1024);
+
+// Tạo process mới
+pid_t pid = fork();
+
+// Cấp phát bộ nhớ
+void* ptr = mmap(NULL, size, PROT_READ|PROT_WRITE, ...);
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 5 -->
+      <section>
+        <h2>Kernel Space vs User Space</h2>
+        <div class="example">
+          <p><strong>User Space (Ring 3):</strong></p>
+          <ul>
+            <li>Ứng dụng người dùng: Firefox, LibreOffice</li>
+            <li>Thư viện hệ thống: glibc</li>
+            <li>Công cụ: ls, cp, mv</li>
+          </ul>
+          <p><strong>Kernel Space (Ring 0):</strong></p>
+          <ul>
+            <li>Device Drivers</li>
+            <li>File System Code</li>
+            <li>Network Stack</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Slide 6 -->
+      <section>
+        <h2>Kernel Modules</h2>
+        <p>Mở rộng chức năng kernel không cần biên dịch lại</p>
+        <div class="example">
+          <p><strong>Các lệnh quản lý module:</strong></p>
+          <pre><code>
+# Liệt kê các module đang hoạt động
+lsmod
+
+# Nạp module
+modprobe nvidia
+
+# Gỡ module
+rmmod nvidia
+
+# Thông tin chi tiết về module
+modinfo nvidia
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 7 -->
+      <section>
+        <h2>Process Management</h2>
+        <div class="example">
+          <p><strong>Ví dụ về quản lý tiến trình:</strong></p>
+          <pre><code>
+// Fork một process mới
+pid_t child_pid = fork();
+if (child_pid == 0) {
+  // Code cho child process
+  execl("/bin/ls", "ls", NULL);
+} else {
+  // Code cho parent process
+  wait(NULL);
+}
+          </code></pre>
+          <p><strong>Các trạng thái của tiến trình:</strong></p>
+          <ul>
+            <li>Running (R)</li>
+            <li>Sleeping (S)</li>
+            <li>Stopped (T)</li>
+            <li>Zombie (Z)</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Slide 8 -->
+      <section>
+        <h2>Memory Management</h2>
+        <div class="example">
+          <p><strong>Virtual Memory Layout:</strong></p>
+          <pre><code>
+High Memory  +----------------+
+           |    Stack      |
+           |      ↓       |
+           |      ...     |
+           |      ↑       |
+           |    Heap      |
+           |    Data      |
+           |    Text      |
+Low Memory   +----------------+
+          </code></pre>
+          <p><strong>Page Table Entry:</strong></p>
+          <ul>
+            <li>Present/Absent bit</li>
+            <li>Read/Write permissions</li>
+            <li>User/Supervisor mode</li>
+            <li>Physical page frame number</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Slide 9 -->
+      <section>
+        <h2>File System</h2>
+        <div class="example">
+          <p><strong>Cấu trúc VFS (Virtual File System):</strong></p>
+          <pre><code>
+/
+├── bin    # Chứa các binary thực thi
+├── dev    # Device files
+├── etc    # Configuration files
+├── home   # User home directories
+├── proc   # Process information
+└── sys    # Kernel and system info
+          </code></pre>
+          <p><strong>File System Types:</strong></p>
+          <ul>
+            <li>ext4: Extended File System 4</li>
+            <li>btrfs: B-tree File System</li>
+            <li>xfs: High-performance FS</li>
+            <li>tmpfs: Temporary FS in RAM</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Slide 10 -->
+      <section>
+        <h2>Security</h2>
+        <div class="example">
+          <p><strong>Permissions Linux:</strong></p>
+          <pre><code>
+# File permissions
+-rwxr-xr-x  1 user group 4096 Dec 8 21:00 file.txt
+# chmod examples
+chmod 755 file.txt  # rwxr-xr-x
+chmod u+x file.txt  # Add execute for user
+
+# SELinux context
+ls -Z file.txt
+user:role:type:level
+          </code></pre>
+          <p><strong>Capabilities:</strong></p>
+          <ul>
+            <li>CAP_NET_ADMIN: Network administration</li>
+            <li>CAP_SYS_ADMIN: System administration</li>
+            <li>CAP_CHOWN: Change file ownership</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Slide 11 -->
+      <section>
+        <h2>Network Stack</h2>
+        <div class="example">
+          <p><strong>TCP/IP Stack trong Kernel:</strong></p>
+          <pre><code>
+Application Layer
+   ↕
+Transport Layer (TCP/UDP)
+   ↕
+Network Layer (IP)
+   ↕
+Link Layer (Ethernet)
+   ↕
+Physical Layer
+          </code></pre>
+          <p><strong>Network Tools:</strong></p>
+          <ul>
+            <li>tcpdump: Packet capture</li>
+            <li>netstat: Network statistics</li>
+            <li>ss: Socket statistics</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Slide 12 -->
+      <section>
+        <h2>Device Drivers</h2>
+        <div class="example">
+          <p><strong>Cấu trúc cơ bản của một driver:</strong></p>
+          <pre><code>
+// Simple character device driver
+static int __init my_init(void) {
+  // Initialize device
+  printk(KERN_INFO "Device initialized\n");
+  return 0;
+}
+
+static void __exit my_exit(void) {
+  // Cleanup
+  printk(KERN_INFO "Device removed\n");
+}
+
+module_init(my_init);
+module_exit(my_exit);
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 13 -->
+      <section>
+        <h2>Debugging và Monitoring</h2>
+        <div class="example">
+          <p><strong>Kernel Debugging Tools:</strong></p>
+          <ul>
+            <li>dmesg: Kernel messages</li>
+            <li>ftrace: Function tracer</li>
+            <li>perf: Performance analysis</li>
+            <li>systemtap: Kernel instrumentation</li>
+          </ul>
+          <pre><code>
+# Xem kernel messages
+dmesg | tail
+
+# Theo dõi performance
+perf top -p 1234
+
+# Trace system calls
+strace ./program
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 14 -->
+      <section>
+        <h2>Tài liệu tham khảo</h2>
+        <ul>
+          <li>The Linux Kernel Documentation (kernel.org)</li>
+          <li>Linux Kernel Development (Robert Love)</li>
+          <li>Understanding the Linux Kernel (O'Reilly)</li>
+          <li>Linux Device Drivers (O'Reilly)</li>
+        </ul>
+        <div class="example">
+          <p><strong>Tài nguyên học tập:</strong></p>
+          <ul>
+            <li>Linux Kernel Newbies: kernelnewbies.org</li>
+            <li>The Linux Documentation Project: tldp.org</li>
+            <li>Kernel source code: github.com/torvalds/linux</li>
+          </ul>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      controls: true,
+      progress: true,
+      center: true,
+      hash: true
+    });
+  </script>
+</body>
+</html>

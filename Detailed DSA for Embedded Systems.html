@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSA for Embedded Systems - Detailed</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/black.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/monokai.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <style>
+    .reveal section {
+      text-align: left;
+    }
+    .reveal pre {
+      width: 100%;
+      font-size: 0.6em;
+    }
+    .reveal h1 { font-size: 2.2em; }
+    .reveal h2 { font-size: 1.8em; }
+    .reveal h3 { 
+      font-size: 1.4em;
+      color: #42affa;
+    }
+    .important {
+      color: #ff4444;
+      font-weight: bold;
+    }
+    .note {
+      font-size: 0.8em;
+      color: #888;
+    }
+    .pros {
+      color: #4CAF50;
+    }
+    .cons {
+      color: #f44336;
+    }
+    .code-wrapper {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Title Slide -->
+      <section>
+        <h1>Cấu Trúc Dữ Liệu & Giải Thuật trong Embedded Systems</h1>
+        <h3>Chi tiết và Ứng dụng thực tế</h3>
+        <p class="note">Bấm Space hoặc mũi tên để chuyển slide</p>
+      </section>
+
+      <!-- Overview -->
+      <section>
+        <h2>Nội dung chi tiết</h2>
+        <ol>
+          <li>Circular Buffer
+            <ul>
+              <li>Cấu trúc và nguyên lý</li>
+              <li>Ứng dụng trong UART/ADC</li>
+              <li>Implementation</li>
+            </ul>
+          </li>
+          <li>Static Linked List
+            <ul>
+              <li>Memory Pool Design</li>
+              <li>Thread-safe Implementation</li>
+            </ul>
+          </li>
+          <li>State Machine & Lookup Tables</li>
+          <li>RTOS Queue & Bit Manipulation</li>
+        </ol>
+      </section>
+
+      <!-- Circular Buffer Section -->
+      <section>
+        <section>
+          <h2>1. Circular Buffer</h2>
+          <h3>Khái niệm cơ bản</h3>
+          <ul>
+            <li>Còn gọi là Ring Buffer hoặc Circular Queue</li>
+            <li>Cấu trúc FIFO (First In First Out)</li>
+            <li>Kích thước cố định, quản lý bộ nhớ hiệu quả</li>
+          </ul>
+          <div class="important">
+            Ưu điểm chính:
+            <ul>
+              <li>Không có memory fragmentation</li>
+              <li>Thread-safe với atomic operations</li>
+              <li>Hiệu quả cho producer-consumer pattern</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Ứng dụng trong Embedded</h3>
+          <ol>
+            <li>UART/Serial Communication
+              <ul>
+                <li>Buffer nhận dữ liệu từ interrupt</li>
+                <li>Buffer gửi dữ liệu không đồng bộ</li>
+              </ul>
+            </li>
+            <li>ADC Data Collection
+              <ul>
+                <li>Lưu trữ mẫu ADC từ DMA</li>
+                <li>Xử lý dữ liệu ở background</li>
+              </ul>
+            </li>
+            <li>Audio Processing
+              <ul>
+                <li>Buffer audio stream</li>
+                <li>Tránh audio glitches</li>
+              </ul>
+            </li>
+          </ol>
+        </section>
+
+        <section>
+          <h3>Implementation</h3>
+          <div class="code-wrapper">
+            <pre><code class="c">#define BUFFER_SIZE 64
+
+typedef struct {
+  uint8_t data[BUFFER_SIZE];
+  volatile uint16_t head;  // Write pointer
+  volatile uint16_t tail;  // Read pointer
+  uint16_t count;
+} RingBuffer_t;
+
+// Initialize buffer
+void RingBuffer_Init(RingBuffer_t* buffer) {
+  buffer->head = 0;
+  buffer->tail = 0;
+  buffer->count = 0;
+}
+
+// Thread-safe write
+bool RingBuffer_Write(RingBuffer_t* buffer, uint8_t data) {
+  // Disable interrupts if needed
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  
+  if (buffer->count >= BUFFER_SIZE) {
+      __set_PRIMASK(primask);
+      return false;
+  }
+  
+  buffer->data[buffer->head] = data;
+  buffer->head = (buffer->head + 1) % BUFFER_SIZE;
+  buffer->count++;
+  
+  // Restore interrupt state
+  __set_PRIMASK(primask);
+  return true;
+}
+
+// Thread-safe read
+bool RingBuffer_Read(RingBuffer_t* buffer, uint8_t* data) {
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  
+  if (buffer->count == 0) {
+      __set_PRIMASK(primask);
+      return false;
+  }
+  
+  *data = buffer->data[buffer->tail];
+  buffer->tail = (buffer->tail + 1) % BUFFER_SIZE;
+  buffer->count--;
+  
+  __set_PRIMASK(primask);
+  return true;
+}</code></pre>
+          </div>
+        </section>
+      </section>
+
+      <!-- Static Linked List Section -->
+      <section>
+        <section>
+          <h2>2. Static Linked List</h2>
+          <h3>Memory Pool Design</h3>
+          <ul>
+            <li>Sử dụng array làm pool của nodes</li>
+            <li>Quản lý nodes bằng indices thay vì pointers</li>
+            <li>Không sử dụng dynamic memory allocation</li>
+          </ul>
+          <div class="important">
+            Ưu điểm:
+            <ul>
+              <li>Deterministic memory usage</li>
+              <li>Không có heap fragmentation</li>
+              <li>Phù hợp với MISRA guidelines</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Implementation</h3>
+          <div class="code-wrapper">
+            <pre><code class="c">#define MAX_NODES 32
+
+typedef struct {
+  uint8_t data;
+  uint8_t next_index;
+} Node_t;
+
+typedef struct {
+  Node_t nodes[MAX_NODES];
+  uint8_t free_index;    // First free node
+  uint8_t head_index;    // First used node
+  uint8_t count;
+} StaticList_t;
+
+void List_Init(StaticList_t* list) {
+  // Initialize free list
+  for(uint8_t i = 0; i < MAX_NODES - 1; i++) {
+      list->nodes[i].next_index = i + 1;
+  }
+  list->nodes[MAX_NODES-1].next_index = 0xFF;
+  list->free_index = 0;
+  list->head_index = 0xFF;
+  list->count = 0;
+}
+
+bool List_Insert(StaticList_t* list, uint8_t data) {
+  if(list->free_index == 0xFF)
+      return false;  // List full
+      
+  uint8_t new_index = list->free_index;
+  list->free_index = list->nodes[new_index].next_index;
+  
+  // Insert at head
+  list->nodes[new_index].data = data;
+  list->nodes[new_index].next_index = list->head_index;
+  list->head_index = new_index;
+  list->count++;
+  
+  return true;
+}
+
+bool List_Remove(StaticList_t* list, uint8_t data) {
+  if(list->head_index == 0xFF)
+      return false;  // Empty list
+      
+  uint8_t current = list->head_index;
+  uint8_t previous = 0xFF;
+  
+  while(current != 0xFF) {
+      if(list->nodes[current].data == data) {
+          // Remove node
+          if(previous == 0xFF)
+              list->head_index = list->nodes[current].next_index;
+          else
+              list->nodes[previous].next_index = 
+                  list->nodes[current].next_index;
+                  
+          // Add to free list
+          list->nodes[current].next_index = list->free_index;
+          list->free_index = current;
+          list->count--;
+          return true;
+      }
+      previous = current;
+      current = list->nodes[current].next_index;
+  }
+  return false;
+}</code></pre>
+          </div>
+        </section>
+      </section>
+
+      <!-- State Machine Section -->
+      <section>
+        <section>
+          <h2>3. State Machine</h2>
+          <h3>Thiết kế và Ứng dụng</h3>
+          <ul>
+            <li>Finite State Machine (FSM)</li>
+            <li>Event-driven architecture</li>
+            <li>Deterministic behavior</li>
+          </ul>
+          <div class="important">
+            Ứng dụng chính:
+            <ul>
+              <li>Protocol handling (UART, I2C, SPI)</li>
+              <li>User interface control</li>
+              <li>System mode management</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Implementation Example</h3>
+          <div class="code-wrapper">
+            <pre><code class="c">typedef enum {
+  STATE_IDLE,
+  STATE_READING,
+  STATE_PROCESSING,
+  STATE_ERROR
+} SystemState_t;
+
+typedef enum {
+  EVENT_DATA_READY,
+  EVENT_TIMEOUT,
+  EVENT_ERROR,
+  EVENT_COMPLETE
+} SystemEvent_t;
+
+typedef struct {
+  SystemState_t current_state;
+  uint32_t timeout_counter;
+  uint8_t data_buffer[32];
+  uint8_t buffer_index;
+} StateMachine_t;
+
+void StateMachine_Init(StateMachine_t* sm) {
+  sm->current_state = STATE_IDLE;
+  sm->timeout_counter = 0;
+  sm->buffer_index = 0;
+}
+
+void StateMachine_ProcessEvent(StateMachine_t* sm, 
+                           SystemEvent_t event) {
+  switch(sm->current_state) {
+      case STATE_IDLE:
+          if(event == EVENT_DATA_READY) {
+              sm->current_state = STATE_READING;
+              sm->timeout_counter = 0;
+              sm->buffer_index = 0;
+          }
+          break;
+          
+      case STATE_READING:
+          if(event == EVENT_COMPLETE) {
+              sm->current_state = STATE_PROCESSING;
+          }
+          else if(event == EVENT_TIMEOUT) {
+              sm->current_state = STATE_ERROR;
+          }
+          break;
+          
+      case STATE_PROCESSING:
+          if(event == EVENT_COMPLETE) {
+              sm->current_state = STATE_IDLE;
+          }
+          else if(event == EVENT_ERROR) {
+              sm->current_state = STATE_ERROR;
+          }
+          break;
+          
+      case STATE_ERROR:
+          if(event == EVENT_COMPLETE) {
+              sm->current_state = STATE_IDLE;
+          }
+          break;
+  }
+}</code></pre>
+          </div>
+        </section>
+      </section>
+
+      <!-- Lookup Tables Section -->
+      <section>
+        <section>
+          <h2>4. Lookup Tables</h2>
+          <h3>Tối ưu hóa tính toán</h3>
+          <ul>
+            <li>Pre-calculated values</li>
+            <li>Trade memory for CPU cycles</li>
+            <li>Deterministic execution time</li>
+          </ul>
+          <div class="important">
+            Ứng dụng phổ biến:
+            <ul>
+              <li>Trigonometric functions</li>
+              <li>CRC calculations</li>
+              <li>Character conversion</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>Implementation Examples</h3>
+          <div class="code-wrapper">
+            <pre><code class="c">// Sine table (0-90 degrees, scaled by 1000)
+const uint16_t sine_table[91] = {
+  0, 17, 35, 52, 70, 87, 105, 122, 139, 156,
+  174, 191, 208, 225, 242, 259, 276, 292, 309, 326,
+  342, 358, 375, 391, 407, 423, 438, 454, 469, 485,
+  500, 515, 530, 545, 559, 574, 588, 602, 616, 629,
+  643, 656, 669, 682, 695, 707, 719, 731, 743, 755,
+  766, 777, 788, 799, 809, 819, 829, 839, 848, 857,
+  866, 875, 883, 891, 899, 906, 914, 921, 927, 934,
+  940, 946, 951, 956, 961, 966, 970, 974, 978, 

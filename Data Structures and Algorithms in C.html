@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Structures and Algorithms in C</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/black.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/monokai.min.css">
+  <style>
+    .reveal section {
+      text-align: left;
+    }
+    .reveal pre {
+      width: 100%;
+      font-size: 0.7em;
+    }
+    .reveal h1 {
+      font-size: 2.2em;
+    }
+    .reveal h2 {
+      font-size: 1.8em;
+    }
+    .reveal h3 {
+      font-size: 1.4em;
+      color: #42affa;
+    }
+    .highlight {
+      color: #42affa;
+    }
+    .note {
+      font-size: 0.8em;
+      color: #888;
+    }
+    .reveal code {
+      font-family: monospace;
+    }
+    .complexity {
+      color: #ff4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Title Slide -->
+      <section>
+        <h1>Cấu Trúc Dữ Liệu và Giải Thuật trong C</h1>
+        <h3>Data Structures and Algorithms</h3>
+        <p class="note">Bấm Space hoặc mũi tên để chuyển slide</p>
+      </section>
+
+      <!-- Overview -->
+      <section>
+        <h2>Nội Dung</h2>
+        <ol>
+          <li>Cấu trúc dữ liệu cơ bản
+            <ul>
+              <li>Array (Mảng)</li>
+              <li>Linked List (Danh sách liên kết)</li>
+              <li>Stack (Ngăn xếp)</li>
+              <li>Queue (Hàng đợi)</li>
+            </ul>
+          </li>
+          <li>Cấu trúc dữ liệu nâng cao
+            <ul>
+              <li>Tree (Cây)</li>
+              <li>Graph (Đồ thị)</li>
+              <li>Hash Table (Bảng băm)</li>
+            </ul>
+          </li>
+          <li>Giải thuật
+            <ul>
+              <li>Sorting (Sắp xếp)</li>
+              <li>Searching (Tìm kiếm)</li>
+              <li>Graph Algorithms (Giải thuật đồ thị)</li>
+            </ul>
+          </li>
+        </ol>
+      </section>
+
+      <!-- Arrays -->
+      <section>
+        <section>
+          <h2>1. Array (Mảng)</h2>
+          <ul>
+            <li>Cấu trúc dữ liệu cơ bản nhất</li>
+            <li>Các phần tử liên tiếp trong bộ nhớ</li>
+            <li>Truy cập ngẫu nhiên O(1)</li>
+            <li>Kích thước cố định (với static array)</li>
+          </ul>
+          <pre><code class="c">// Khai báo mảng
+int arr[5] = {1, 2, 3, 4, 5};
+
+// Mảng động
+int* dynamic_arr = (int*)malloc(n * sizeof(int));</code></pre>
+        </section>
+
+        <section>
+          <h3>Array Operations</h3>
+          <pre><code class="c">// Truy cập phần tử - O(1)
+int value = arr[index];
+
+// Tìm kiếm tuyến tính - O(n)
+int linearSearch(int arr[], int n, int key) {
+  for(int i = 0; i < n; i++) {
+      if(arr[i] == key) return i;
+  }
+  return -1;
+}
+
+// Chèn vào cuối - O(1)
+// Chèn vào vị trí bất kỳ - O(n)</code></pre>
+        </section>
+      </section>
+
+      <!-- Linked List -->
+      <section>
+        <section>
+          <h2>2. Linked List</h2>
+          <ul>
+            <li>Các node liên kết với nhau</li>
+            <li>Kích thước động</li>
+            <li>Không yêu cầu bộ nhớ liên tục</li>
+            <li>Truy cập tuần tự O(n)</li>
+          </ul>
+          <pre><code class="c">typedef struct Node {
+  int data;
+  struct Node* next;
+} Node;
+
+Node* createNode(int data) {
+  Node* newNode = (Node*)malloc(sizeof(Node));
+  newNode->data = data;
+  newNode->next = NULL;
+  return newNode;
+}</code></pre>
+        </section>
+
+        <section>
+          <h3>Linked List Operations</h3>
+          <pre><code class="c">// Chèn đầu - O(1)
+void insertFront(Node** head, int data) {
+  Node* newNode = createNode(data);
+  newNode->next = *head;
+  *head = newNode;
+}
+
+// Tìm kiếm - O(n)
+Node* search(Node* head, int key) {
+  Node* current = head;
+  while(current != NULL) {
+      if(current->data == key) return current;
+      current = current->next;
+  }
+  return NULL;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Stack -->
+      <section>
+        <section>
+          <h2>3. Stack (Ngăn xếp)</h2>
+          <ul>
+            <li>LIFO (Last In First Out)</li>
+            <li>Push và Pop là thao tác cơ bản</li>
+            <li>Ứng dụng: 
+              <ul>
+                <li>Quản lý function calls</li>
+                <li>Undo operations</li>
+                <li>Expression evaluation</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Stack Implementation</h3>
+          <pre><code class="c">typedef struct {
+  int* array;
+  int capacity;
+  int top;
+} Stack;
+
+// Push - O(1)
+void push(Stack* stack, int data) {
+  if(stack->top == stack->capacity - 1) return;
+  stack->array[++stack->top] = data;
+}
+
+// Pop - O(1)
+int pop(Stack* stack) {
+  if(stack->top == -1) return -1;
+  return stack->array[stack->top--];
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Queue -->
+      <section>
+        <section>
+          <h2>4. Queue (Hàng đợi)</h2>
+          <ul>
+            <li>FIFO (First In First Out)</li>
+            <li>Enqueue và Dequeue là thao tác cơ bản</li>
+            <li>Ứng dụng:
+              <ul>
+                <li>Task scheduling</li>
+                <li>Resource sharing</li>
+                <li>BFS algorithm</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Queue Implementation</h3>
+          <pre><code class="c">typedef struct {
+  int* array;
+  int capacity;
+  int front, rear;
+  int size;
+} Queue;
+
+// Enqueue - O(1)
+void enqueue(Queue* queue, int data) {
+  if(queue->size == queue->capacity) return;
+  queue->rear = (queue->rear + 1) % queue->capacity;
+  queue->array[queue->rear] = data;
+  queue->size++;
+}
+
+// Dequeue - O(1)
+int dequeue(Queue* queue) {
+  if(queue->size == 0) return -1;
+  int item = queue->array[queue->front];
+  queue->front = (queue->front + 1) % queue->capacity;
+  queue->size--;
+  return item;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Tree -->
+      <section>
+        <section>
+          <h2>5. Tree (Cây)</h2>
+          <ul>
+            <li>Cấu trúc phân cấp</li>
+            <li>Binary Tree: mỗi node có tối đa 2 con</li>
+            <li>Binary Search Tree (BST):
+              <ul>
+                <li>Left < Root < Right</li>
+                <li>Tìm kiếm O(log n) với cây cân bằng</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Binary Search Tree</h3>
+          <pre><code class="c">typedef struct TreeNode {
+  int data;
+  struct TreeNode *left, *right;
+} TreeNode;
+
+// Chèn node mới - O(log n)
+TreeNode* insert(TreeNode* root, int data) {
+  if(root == NULL) {
+      return createNode(data);
+  }
+  if(data < root->data)
+      root->left = insert(root->left, data);
+  else if(data > root->data)
+      root->right = insert(root->right, data);
+  return root;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Graph -->
+      <section>
+        <section>
+          <h2>6. Graph (Đồ thị)</h2>
+          <ul>
+            <li>Biểu diễn mối quan hệ giữa các đối tượng</li>
+            <li>Components:
+              <ul>
+                <li>Vertices (đỉnh)</li>
+                <li>Edges (cạnh)</li>
+              </ul>
+            </li>
+            <li>Biểu diễn:
+              <ul>
+                <li>Adjacency Matrix</li>
+                <li>Adjacency List</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Graph Implementation</h3>
+          <pre><code class="c">// Adjacency Matrix
+int graph[V][V];
+
+// Adjacency List
+typedef struct AdjListNode {
+  int dest;
+  struct AdjListNode* next;
+} AdjListNode;
+
+typedef struct Graph {
+  int V;
+  AdjListNode** array;
+} Graph;
+
+// Add Edge
+void addEdge(Graph* graph, int src, int dest) {
+  AdjListNode* newNode = createNode(dest);
+  newNode->next = graph->array[src];
+  graph->array[src] = newNode;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Sorting -->
+      <section>
+        <section>
+          <h2>7. Sorting Algorithms</h2>
+          <table>
+            <tr>
+              <th>Algorithm</th>
+              <th>Time Complexity</th>
+              <th>Space</th>
+            </tr>
+            <tr>
+              <td>Bubble Sort</td>
+              <td>O(n²)</td>
+              <td>O(1)</td>
+            </tr>
+            <tr>
+              <td>Quick Sort</td>
+              <td>O(n log n)</td>
+              <td>O(log n)</td>
+            </tr>
+            <tr>
+              <td>Merge Sort</td>
+              <td>O(n log n)</td>
+              <td>O(n)</td>
+            </tr>
+          </table>
+        </section>
+
+        <section>
+          <h3>Quick Sort Implementation</h3>
+          <pre><code class="c">void quickSort(int arr[], int low, int high) {
+  if(low < high) {
+      int pi = partition(arr, low, high);
+      quickSort(arr, low, pi - 1);
+      quickSort(arr, pi + 1, high);
+  }
+}
+
+int partition(int arr[], int low, int high) {
+  int pivot = arr[high];
+  int i = low - 1;
+  
+  for(int j = low; j <= high - 1; j++) {
+      if(arr[j] < pivot) {
+          i++;
+          swap(&arr[i], &arr[j]);
+      }
+  }
+  swap(&arr[i + 1], &arr[high]);
+  return i + 1;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Searching -->
+      <section>
+        <section>
+          <h2>8. Searching Algorithms</h2>
+          <ul>
+            <li>Linear Search
+              <ul>
+                <li>O(n) complexity</li>
+                <li>Unsorted arrays</li>
+              </ul>
+            </li>
+            <li>Binary Search
+              <ul>
+                <li>O(log n) complexity</li>
+                <li>Sorted arrays</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Binary Search Implementation</h3>
+          <pre><code class="c">int binarySearch(int arr[], int l, int r, int x) {
+  while(l <= r) {
+      int m = l + (r - l) / 2;
+      
+      if(arr[m] == x) return m;
+      
+      if(arr[m] < x)
+          l = m + 1;
+      else
+          r = m - 1;
+  }
+  return -1;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Graph Algorithms -->
+      <section>
+        <section>
+          <h2>9. Graph Algorithms</h2>
+          <ul>
+            <li>Breadth First Search (BFS)
+              <ul>
+                <li>Level by level traversal</li>
+                <li>Uses Queue</li>
+              </ul>
+            </li>
+            <li>Depth First Search (DFS)
+              <ul>
+                <li>Explores as far as possible</li>
+              

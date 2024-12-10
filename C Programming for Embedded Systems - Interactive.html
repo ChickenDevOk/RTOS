@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C Programming for Embedded Systems</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/black.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/monokai.min.css">
+  <style>
+    .reveal section {
+      text-align: left;
+    }
+    .reveal pre {
+      width: 100%;
+      font-size: 0.7em;
+    }
+    .reveal h1 {
+      font-size: 2.2em;
+    }
+    .reveal h2 {
+      font-size: 1.8em;
+    }
+    .reveal h3 {
+      font-size: 1.4em;
+      color: #42affa;
+    }
+    .highlight {
+      color: #42affa;
+    }
+    .note {
+      font-size: 0.8em;
+      color: #888;
+    }
+    .reveal code {
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Title Slide -->
+      <section>
+        <h1>Lập Trình C Nâng Cao cho Embedded Systems</h1>
+        <h3>Khóa học chuyên sâu về C trong hệ thống nhúng</h3>
+        <p class="note">Bấm Space hoặc mũi tên để chuyển slide</p>
+      </section>
+
+      <!-- Overview -->
+      <section>
+        <h2>Nội Dung Chính</h2>
+        <ul>
+          <li>Memory Management & Pointers</li>
+          <li>Volatile & Const Qualifiers</li>
+          <li>Interrupt Handling</li>
+          <li>Bit Manipulation</li>
+          <li>Structures & Unions</li>
+          <li>Real-time Programming</li>
+        </ul>
+      </section>
+
+      <!-- Memory Management -->
+      <section>
+        <h2>1. Memory Management</h2>
+        <h3>Các loại bộ nhớ trong Embedded</h3>
+        <ul>
+          <li>Flash/ROM
+            <ul>
+              <li>Program memory</li>
+              <li>Constant data</li>
+            </ul>
+          </li>
+          <li>RAM
+            <ul>
+              <li>Variables</li>
+              <li>Stack & Heap</li>
+            </ul>
+          </li>
+          <li>EEPROM
+            <ul>
+              <li>Configuration data</li>
+              <li>Calibration values</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Code Example -->
+      <section>
+        <h2>Memory Access Example</h2>
+        <pre><code class="c">// ROM constant
+const uint8_t FIRMWARE_VERSION[] = {1, 0, 0};
+
+// RAM variables
+static uint8_t buffer[64];
+volatile uint16_t adcValue;
+
+// EEPROM access
+void saveConfig(uint8_t* data, uint8_t len) {
+  for(uint8_t i = 0; i < len; i++) {
+      EEPROM_write(i, data[i]);
+  }
+}</code></pre>
+      </section>
+
+      <!-- Pointers -->
+      <section>
+        <h2>2. Pointers trong Embedded</h2>
+        <ul>
+          <li>Direct Memory Access</li>
+          <li>Hardware Register Access</li>
+          <li>Memory Mapped I/O</li>
+        </ul>
+        <pre><code class="c">// Hardware register pointer
+volatile uint32_t* const PORTA = (uint32_t*)0x40020000;
+
+// Set pin high
+*PORTA |= (1 << 5);
+
+// Read pin state
+uint8_t pinState = (*PORTA >> 5) & 0x01;</code></pre>
+      </section>
+
+      <!-- Volatile -->
+      <section>
+        <h2>3. Volatile Qualifier</h2>
+        <ul>
+          <li>Prevents compiler optimization</li>
+          <li>Used for:
+            <ul>
+              <li>Hardware registers</li>
+              <li>ISR shared variables</li>
+              <li>Multi-threaded data</li>
+            </ul>
+          </li>
+        </ul>
+        <pre><code class="c">volatile uint16_t adcResult;
+volatile struct {
+  uint8_t ready;
+  uint8_t error;
+} status;</code></pre>
+      </section>
+
+      <!-- Interrupts -->
+      <section>
+        <h2>4. Interrupt Handling</h2>
+        <pre><code class="c">void __interrupt__ TIMER0_ISR(void) {
+  if(PIR1bits.TMR0IF) {
+      // Handle timer interrupt
+      systemTicks++;
+      // Clear flag
+      PIR1bits.TMR0IF = 0;
+  }
+}</code></pre>
+        <div class="note">
+          <p>Best Practices:</p>
+          <ul>
+            <li>Keep ISRs short</li>
+            <li>Avoid complex calculations</li>
+            <li>Use volatile for shared data</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Bit Manipulation -->
+      <section>
+        <h2>5. Bit Manipulation</h2>
+        <pre><code class="c">#define SET_BIT(REG, BIT)    ((REG) |= (1U << (BIT)))
+#define CLEAR_BIT(REG, BIT)  ((REG) &= ~(1U << (BIT)))
+#define TOGGLE_BIT(REG, BIT) ((REG) ^= (1U << (BIT)))
+#define READ_BIT(REG, BIT)   (((REG) >> (BIT)) & 1U)
+
+// Usage
+SET_BIT(PORTA, 5);    // Set PA5 high
+CLEAR_BIT(PORTA, 5);  // Set PA5 low</code></pre>
+      </section>
+
+      <!-- Structures -->
+      <section>
+        <h2>6. Structures & Unions</h2>
+        <pre><code class="c">// Packed structure
+typedef struct __attribute__((packed)) {
+  uint8_t command;
+  uint16_t data;
+  uint8_t checksum;
+} Packet_t;  // Size: 4 bytes
+
+// Union for data conversion
+union {
+  uint32_t longWord;
+  struct {
+      uint16_t low;
+      uint16_t high;
+  } words;
+  uint8_t bytes[4];
+} dataConverter;</code></pre>
+      </section>
+
+      <!-- Real-time -->
+      <section>
+        <h2>7. Real-time Programming</h2>
+        <pre><code class="c">typedef struct {
+  void (*task)(void);
+  uint16_t period;
+  uint16_t counter;
+} Task_t;
+
+Task_t tasks[] = {
+  {readSensors,  100, 0},  // 100ms
+  {updateDisplay, 500, 0}   // 500ms
+};
+
+void scheduler(void) {
+  for(uint8_t i = 0; i < sizeof(tasks)/sizeof(Task_t); i++) {
+      if(++tasks[i].counter >= tasks[i].period) {
+          tasks[i].task();
+          tasks[i].counter = 0;
+      }
+  }
+}</code></pre>
+      </section>
+
+      <!-- Best Practices -->
+      <section>
+        <h2>8. Best Practices</h2>
+        <ul>
+          <li>Memory Management
+            <ul>
+              <li>Avoid dynamic allocation</li>
+              <li>Use static buffers</li>
+              <li>Check stack usage</li>
+            </ul>
+          </li>
+          <li>Code Structure
+            <ul>
+              <li>Modular design</li>
+              <li>Hardware abstraction</li>
+              <li>Clear documentation</li>
+            </ul>
+          </li>
+          <li>Debugging
+            <ul>
+              <li>Use watchdog timers</li>
+              <li>Implement error handling</li>
+              <li>Add debug logging</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      transition: 'slide',
+      controls: true,
+      progress: true,
+      plugins: [RevealHighlight]
+    });
+    hljs.initHighlightingOnLoad();
+  </script>
+</body>
+</html>

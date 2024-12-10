@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/theme/white.css">
+  <style>
+    .reveal section img { border: none; box-shadow: none; }
+    .reveal h1 { color: #2c3e50; }
+    .reveal h2 { color: #34495e; }
+    .reveal li { margin: 12px 0; }
+    .reveal pre { font-size: 0.75em; }
+    .example { 
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+      font-size: 0.9em;
+    }
+    .note {
+      font-size: 0.8em;
+      color: #666;
+      font-style: italic;
+    }
+    .code-explanation {
+      font-size: 0.8em;
+      color: #2c3e50;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Slide 1: Introduction -->
+      <section>
+        <h1>Linux Kernel Deep Dive</h1>
+        <h3>Phần 1: Kiến trúc và Quản lý Tài nguyên Cơ bản</h3>
+        <p class="note">Kernel Version: 6.x</p>
+      </section>
+
+      <!-- Slide 2: Kernel Architecture -->
+      <section>
+        <h2>Kiến trúc Chi tiết của Linux Kernel</h2>
+        <div class="example">
+          <p><strong>1. Monolithic Kernel Architecture:</strong></p>
+          <pre><code>
+User Space:
+Applications → GNU C Library → System Call Interface
+
+Kernel Space:
+┌─ System Call Interface
+├─ Process Management
+│  ├─ Scheduler (CFS, RT, Deadline)
+│  └─ Process Control
+├─ Memory Management
+│  ├─ Virtual Memory
+│  └─ Page Cache
+├─ VFS + File Systems
+├─ Network Stack
+└─ Device Drivers
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 3: Kernel Compilation -->
+      <section>
+        <h2>Kernel Compilation và Configuration</h2>
+        <div class="example">
+          <p><strong>Quy trình biên dịch kernel:</strong></p>
+          <pre><code>
+# 1. Lấy source code
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+
+# 2. Cấu hình kernel
+make menuconfig
+# hoặc
+make xconfig
+
+# 3. Biên dịch
+make -j$(nproc)
+
+# 4. Cài đặt modules
+make modules_install
+
+# 5. Cài đặt kernel
+make install
+          </code></pre>
+          <p class="note">Các file cấu hình quan trọng:</p>
+          <ul>
+            <li>.config: Cấu hình kernel</li>
+            <li>arch/x86/configs/: Cấu hình mặc định</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Slide 4: Process Scheduling Deep Dive -->
+      <section>
+        <h2>Process Scheduling Chi tiết</h2>
+        <div class="example">
+          <p><strong>1. Completely Fair Scheduler (CFS):</strong></p>
+          <pre><code>
+struct sched_entity {
+  struct load_weight load;    /* Trọng số cho việc lập lịch */
+  struct rb_node run_node;    /* Red-black tree node */
+  unsigned int on_rq;         /* Đang trong hàng đợi? */
+  u64 exec_start;            /* Thời điểm bắt đầu chạy */
+  u64 sum_exec_runtime;      /* Tổng thời gian đã chạy */
+  u64 vruntime;             /* Thời gian chạy ảo */
+  u64 prev_sum_exec_runtime; /* Thời gian chạy trước đó */
+};
+          </code></pre>
+          <p><strong>2. Các lớp lập lịch:</strong></p>
+          <ul>
+            <li>SCHED_NORMAL (CFS) - cho tiến trình thông thường</li>
+            <li>SCHED_FIFO - cho tiến trình real-time</li>
+            <li>SCHED_RR - round-robin real-time</li>
+            <li>SCHED_BATCH - cho tiến trình batch</li>
+            <li>SCHED_IDLE - cho tiến trình ưu tiên thấp</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Slide 5: Memory Management Deep Dive -->
+      <section>
+        <h2>Memory Management Chi tiết</h2>
+        <div class="example">
+          <p><strong>1. Page Table Levels (x86_64):</strong></p>
+          <pre><code>
+CR3 → PGD → PUD → PMD → PTE → Physical Page
+
+struct page {
+  unsigned long flags;
+  atomic_t _refcount;
+  struct address_space *mapping;
+  pgoff_t index;
+  struct list_head lru;
+  void *virtual;  /* Kernel virtual address */
+};
+          </code></pre>
+          <p><strong>2. NUMA Memory Management:</strong></p>
+          <pre><code>
+struct numa_node {
+  unsigned long min_pfn;
+  unsigned long max_pfn;
+  int node_id;
+  struct pglist_data *pgdat;
+};
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 6: Virtual Memory System -->
+      <section>
+        <h2>Virtual Memory System</h2>
+        <div class="example">
+          <p><strong>1. Memory Areas (VMAs):</strong></p>
+          <pre><code>
+struct vm_area_struct {
+  unsigned long vm_start;     /* Start address */
+  unsigned long vm_end;       /* End address */
+  struct mm_struct *vm_mm;    /* Associated mm_struct */
+  pgprot_t vm_page_prot;     /* Access permissions */
+  unsigned long vm_flags;     /* Flags */
+  struct anon_vma *anon_vma; /* Anonymous VMA object */
+};
+
+// Ví dụ xem VMA của một process
+cat /proc/[pid]/maps
+          </code></pre>
+          <p><strong>2. Page Fault Handler:</strong></p>
+          <pre><code>
+do_page_fault() {
+  1. Lấy địa chỉ lỗi từ CR2
+  2. Tìm VMA tương ứng
+  3. Kiểm tra quyền truy cập
+  4. Xử lý page fault:
+     - Copy-on-Write
+     - Demand Paging
+     - Swap-in
+}
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 7: System Calls Implementation -->
+      <section>
+        <h2>System Calls Implementation</h2>
+        <div class="example">
+          <p><strong>1. System Call Table:</strong></p>
+          <pre><code>
+// arch/x86/entry/syscalls/syscall_64.tbl
+0   common  read    sys_read
+1   common  write   sys_write
+2   common  open    sys_open
+...
+
+// Định nghĩa syscall
+SYSCALL_DEFINE3(read,
+  unsigned int, fd,
+  char __user *, buf,
+  size_t, count)
+{
+  return ksys_read(fd, buf, count);
+}
+          </code></pre>
+          <p><strong>2. System Call Flow:</strong></p>
+          <pre><code>
+User Space → SYSCALL instruction →
+→ system_call entry →
+→ syscall_table lookup →
+→ actual system call implementation →
+→ return to user space
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 8: Interrupt Handling -->
+      <section>
+        <h2>Interrupt Handling</h2>
+        <div class="example">
+          <p><strong>1. Interrupt Descriptor Table (IDT):</strong></p>
+          <pre><code>
+struct idt_desc {
+  u16 offset_low;
+  u16 segment;
+  u8  ist;
+  u8  type_attributes;
+  u16 offset_middle;
+  u32 offset_high;
+  u32 reserved;
+};
+
+// Đăng ký interrupt handler
+request_irq(irq, handler, flags, name, dev);
+          </code></pre>
+          <p><strong>2. Softirq và Tasklet:</strong></p>
+          <pre><code>
+// Định nghĩa softirq
+static struct softirq_action softirq_vec[NR_SOFTIRQS];
+
+// Đăng ký tasklet
+void tasklet_init(struct tasklet_struct *t,
+               void (*func)(unsigned long),
+               unsigned long data);
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 9: Synchronization Mechanisms -->
+      <section>
+        <h2>Cơ chế Đồng bộ hóa</h2>
+        <div class="example">
+          <p><strong>1. Spinlocks:</strong></p>
+          <pre><code>
+spinlock_t my_lock;
+spin_lock_init(&my_lock);
+
+spin_lock(&my_lock);
+// Critical section
+spin_unlock(&my_lock);
+
+// With IRQ disabled
+spin_lock_irqsave(&my_lock, flags);
+// Critical section
+spin_unlock_irqrestore(&my_lock, flags);
+          </code></pre>
+          <p><strong>2. Mutex và Semaphore:</strong></p>
+          <pre><code>
+struct mutex my_mutex;
+mutex_init(&my_mutex);
+
+mutex_lock(&my_mutex);
+// Critical section
+mutex_unlock(&my_mutex);
+
+// Semaphore
+struct semaphore sem;
+sema_init(&sem, 1);
+down(&sem);  // P operation
+up(&sem);    // V operation
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 10: RCU (Read-Copy-Update) -->
+      <section>
+        <h2>RCU Mechanism</h2>
+        <div class="example">
+          <p><strong>1. RCU Basic Usage:</strong></p>
+          <pre><code>
+// Reader
+rcu_read_lock();
+p = rcu_dereference(global_ptr);
+// Use p
+rcu_read_unlock();
+
+// Writer
+new_data = kmalloc(...);
+old_data = global_ptr;
+rcu_assign_pointer(global_ptr, new_data);
+synchronize_rcu();
+kfree(old_data);
+          </code></pre>
+          <p><strong>2. RCU List Traversal:</strong></p>
+          <pre><code>
+struct foo __rcu *head;
+
+// Reader
+rcu_read_lock();
+list_for_each_entry_rcu(p, head, list) {
+  // Access p
+}
+rcu_read_unlock();
+          </code></pre>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      controls: true,
+      progress: true,
+      center: true,
+      hash: true
+    });
+  </script>
+</body>
+</html>

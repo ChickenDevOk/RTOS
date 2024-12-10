@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSA for Embedded Systems</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/black.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/monokai.min.css">
+  <style>
+    .reveal section {
+      text-align: left;
+    }
+    .reveal pre {
+      width: 100%;
+      font-size: 0.7em;
+    }
+    .reveal h1 { font-size: 2.2em; }
+    .reveal h2 { font-size: 1.8em; }
+    .reveal h3 { 
+      font-size: 1.4em;
+      color: #42affa;
+    }
+    .important {
+      color: #ff4444;
+      font-weight: bold;
+    }
+    .note {
+      font-size: 0.8em;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Title -->
+      <section>
+        <h1>Cấu Trúc Dữ Liệu & Giải Thuật cho Embedded Systems</h1>
+        <h3>Phần thường dùng trong lập trình nhúng</h3>
+        <p class="note">Optimized for Resource-Constrained Systems</p>
+      </section>
+
+      <!-- Overview -->
+      <section>
+        <h2>Nội dung chính</h2>
+        <ol>
+          <li>Circular Buffer (Ring Buffer)</li>
+          <li>Linked List đơn</li>
+          <li>State Machine</li>
+          <li>Lookup Tables</li>
+          <li>Queue cho RTOS</li>
+          <li>Bit Arrays & Manipulation</li>
+        </ol>
+      </section>
+
+      <!-- Circular Buffer -->
+      <section>
+        <section>
+          <h2>1. Circular Buffer (Ring Buffer)</h2>
+          <ul>
+            <li>Ứng dụng phổ biến:
+              <ul>
+                <li>UART/SPI buffer</li>
+                <li>ADC data buffer</li>
+                <li>Audio streaming</li>
+              </ul>
+            </li>
+            <li class="important">Ưu điểm:
+              <ul>
+                <li>Bộ nhớ cố định</li>
+                <li>Không phân mảnh</li>
+                <li>Hiệu quả cho producer-consumer</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Ring Buffer Implementation</h3>
+          <pre><code class="c">#define BUFFER_SIZE 64
+
+typedef struct {
+  uint8_t data[BUFFER_SIZE];
+  uint16_t head;  // Write index
+  uint16_t tail;  // Read index
+  uint16_t count; // Number of items
+} RingBuffer_t;
+
+// Initialize buffer
+void RingBuffer_Init(RingBuffer_t* buffer) {
+  buffer->head = 0;
+  buffer->tail = 0;
+  buffer->count = 0;
+}
+
+// Write to buffer
+bool RingBuffer_Write(RingBuffer_t* buffer, uint8_t data) {
+  if(buffer->count >= BUFFER_SIZE) return false;
+  
+  buffer->data[buffer->head] = data;
+  buffer->head = (buffer->head + 1) % BUFFER_SIZE;
+  buffer->count++;
+  return true;
+}
+
+// Read from buffer
+bool RingBuffer_Read(RingBuffer_t* buffer, uint8_t* data) {
+  if(buffer->count == 0) return false;
+  
+  *data = buffer->data[buffer->tail];
+  buffer->tail = (buffer->tail + 1) % BUFFER_SIZE;
+  buffer->count--;
+  return true;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Linked List -->
+      <section>
+        <section>
+          <h2>2. Linked List Đơn</h2>
+          <ul>
+            <li>Ứng dụng trong Embedded:
+              <ul>
+                <li>Task scheduling</li>
+                <li>Memory management</li>
+                <li>Event handling</li>
+              </ul>
+            </li>
+            <li class="important">Lưu ý:
+              <ul>
+                <li>Sử dụng static allocation</li>
+                <li>Pool-based memory management</li>
+                <li>Tránh malloc/free</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Static Linked List</h3>
+          <pre><code class="c">#define MAX_NODES 32
+
+typedef struct Node {
+  uint8_t data;
+  uint8_t next_index;  // Index instead of pointer
+} Node_t;
+
+typedef struct {
+  Node_t nodes[MAX_NODES];
+  uint8_t free_index;  // First free node
+  uint8_t head_index;  // First used node
+  uint8_t count;
+} List_t;
+
+// Initialize list with pool
+void List_Init(List_t* list) {
+  for(uint8_t i = 0; i < MAX_NODES - 1; i++) {
+      list->nodes[i].next_index = i + 1;
+  }
+  list->nodes[MAX_NODES-1].next_index = 0xFF;
+  list->free_index = 0;
+  list->head_index = 0xFF;
+  list->count = 0;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- State Machine -->
+      <section>
+        <section>
+          <h2>3. State Machine</h2>
+          <ul>
+            <li>Ứng dụng:
+              <ul>
+                <li>Protocol handling</li>
+                <li>UI control</li>
+                <li>Device operation modes</li>
+              </ul>
+            </li>
+            <li class="important">Đặc điểm:
+              <ul>
+                <li>Dễ debug và maintain</li>
+                <li>Tiết kiệm RAM</li>
+                <li>Predictable behavior</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>State Machine Implementation</h3>
+          <pre><code class="c">typedef enum {
+  STATE_IDLE,
+  STATE_READING,
+  STATE_PROCESSING,
+  STATE_ERROR
+} State_t;
+
+typedef struct {
+  State_t current_state;
+  uint8_t data_buffer[32];
+  uint8_t data_count;
+} StateMachine_t;
+
+void StateMachine_Run(StateMachine_t* sm) {
+  switch(sm->current_state) {
+      case STATE_IDLE:
+          if(UART_DataAvailable()) {
+              sm->current_state = STATE_READING;
+              sm->data_count = 0;
+          }
+          break;
+          
+      case STATE_READING:
+          if(sm->data_count < 32) {
+              sm->data_buffer[sm->data_count++] = UART_Read();
+              if(sm->data_count == 32)
+                  sm->current_state = STATE_PROCESSING;
+          }
+          break;
+          
+      // Other states...
+  }
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Lookup Tables -->
+      <section>
+        <section>
+          <h2>4. Lookup Tables</h2>
+          <ul>
+            <li>Ứng dụng:
+              <ul>
+                <li>Sine/Cosine values</li>
+                <li>CRC calculations</li>
+                <li>Character conversion</li>
+              </ul>
+            </li>
+            <li class="important">Ưu điểm:
+              <ul>
+                <li>Tốc độ truy xuất nhanh O(1)</li>
+                <li>Tiết kiệm CPU cycles</li>
+                <li>Deterministic timing</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Lookup Table Example</h3>
+          <pre><code class="c">// Sine table (0-90 degrees)
+const uint8_t sine_table[91] = {
+  0, 4, 8, 13, 17, 22, 26, 31, 35, 39,
+  44, 48, 52, 56, 60, 64, 68, 72, 76, 80,
+  // ... more values
+};
+
+// CRC8 table
+const uint8_t crc8_table[256] = {
+  0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15,
+  // ... more values
+};
+
+// Fast CRC8 calculation
+uint8_t CRC8_Calculate(uint8_t* data, uint8_t len) {
+  uint8_t crc = 0;
+  while(len--) {
+      crc = crc8_table[crc ^ *data++];
+  }
+  return crc;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Queue for RTOS -->
+      <section>
+        <section>
+          <h2>5. Queue cho RTOS</h2>
+          <ul>
+            <li>Ứng dụng:
+              <ul>
+                <li>Task communication</li>
+                <li>Event handling</li>
+                <li>Data buffering</li>
+              </ul>
+            </li>
+            <li class="important">Đặc điểm:
+              <ul>
+                <li>Thread-safe</li>
+                <li>Fixed size</li>
+                <li>Blocking/Non-blocking modes</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>RTOS Queue Implementation</h3>
+          <pre><code class="c">typedef struct {
+  uint8_t* buffer;
+  uint16_t size;
+  uint16_t count;
+  uint16_t head;
+  uint16_t tail;
+  SemaphoreHandle_t mutex;
+  SemaphoreHandle_t not_full;
+  SemaphoreHandle_t not_empty;
+} Queue_t;
+
+bool Queue_Send(Queue_t* queue, uint8_t* data, uint32_t timeout) {
+  if(xSemaphoreTake(queue->not_full, timeout) != pdTRUE)
+      return false;
+      
+  xSemaphoreTake(queue->mutex, portMAX_DELAY);
+  memcpy(&queue->buffer[queue->head], data, item_size);
+  queue->head = (queue->head + 1) % queue->size;
+  queue->count++;
+  xSemaphoreGive(queue->mutex);
+  
+  xSemaphoreGive(queue->not_empty);
+  return true;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Bit Arrays -->
+      <section>
+        <section>
+          <h2>6. Bit Arrays & Manipulation</h2>
+          <ul>
+            <li>Ứng dụng:
+              <ul>
+                <li>GPIO control</li>
+                <li>Status flags</li>
+                <li>Configuration settings</li>
+              </ul>
+            </li>
+            <li class="important">Ưu điểm:
+              <ul>
+                <li>Tiết kiệm bộ nhớ</li>
+                <li>Hiệu quả về tốc độ</li>
+                <li>Atomic operations</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Bit Manipulation</h3>
+          <pre><code class="c">#define BIT(x) (1UL << (x))
+#define SET_BIT(REG, BIT) ((REG) |= (BIT))
+#define CLEAR_BIT(REG, BIT) ((REG) &= ~(BIT))
+#define TOGGLE_BIT(REG, BIT) ((REG) ^= (BIT))
+#define READ_BIT(REG, BIT) (((REG) & (BIT)) != 0)
+
+// Bit array implementation
+typedef struct {
+  uint32_t bits[8];  // 256 bits
+} BitArray_t;
+
+void BitArray_Set(BitArray_t* arr, uint8_t bit) {
+  arr->bits[bit >> 5] |= BIT(bit & 0x1F);
+}
+
+void BitArray_Clear(BitArray_t* arr, uint8_t bit) {
+  arr->bits[bit >> 5] &= ~BIT(bit & 0x1F);
+}
+
+bool BitArray_Test(BitArray_t* arr, uint8_t bit) {
+  return (arr->bits[bit >> 5] & BIT(bit & 0x1F)) != 0;
+}</code></pre>
+        </section>
+      </section>
+
+      <!-- Best Practices -->
+      <section>
+        <h2>Best Practices</h2>
+        <ul>
+          <li>Memory Management
+            <ul>
+              <li>Sử dụng static allocation</li>
+              <li>Tránh dynamic memory</li>
+              <li>Pool-based allocation khi cần</li>
+            </ul>
+          </li>
+          <li>Performance
+            <ul>
+              <li>Sử dụng lookup tables thay vì tính toán</li>
+              <li>Tối ưu bit operations</li>
+              <li>Tránh recursion</li>
+            </ul>
+          </li>
+          <li>Reliability
+            <ul>
+              <li>Boundary checking</li>
+              <li>Error handling</li>
+              <li>Watchdog integration</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdnjs

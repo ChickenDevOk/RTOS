@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/theme/white.css">
+  <style>
+    .reveal section img { border: none; box-shadow: none; }
+    .reveal h1 { color: #2c3e50; }
+    .reveal h2 { color: #34495e; }
+    .reveal li { margin: 12px 0; }
+    .reveal pre { font-size: 0.75em; }
+    .example { 
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+      font-size: 0.9em;
+    }
+    .note {
+      font-size: 0.8em;
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Slide 1 -->
+      <section>
+        <h1>Linux Kernel Deep Dive</h1>
+        <h3>Phần 2: Network Stack, File Systems, và Advanced Topics</h3>
+        <p class="note">Kernel Version: 6.x</p>
+      </section>
+
+      <!-- Slide 2: Network Stack Implementation -->
+      <section>
+        <h2>Network Stack Implementation</h2>
+        <div class="example">
+          <p><strong>1. Socket Buffer (skb):</strong></p>
+          <pre><code>
+struct sk_buff {
+  struct net_device *dev;
+  unsigned char *head;
+  unsigned char *data;
+  unsigned char *tail;
+  unsigned char *end;
+  unsigned int len;
+  __u16 protocol;
+  __u16 transport_header;
+  __u16 network_header;
+  __u16 mac_header;
+};
+
+// Xử lý packet
+static int process_packet(struct sk_buff *skb) {
+  struct iphdr *iph = ip_hdr(skb);
+  struct tcphdr *tcph = tcp_hdr(skb);
+  // Process headers
+}
+          </code></pre>
+          <p><strong>2. Network Device Driver:</strong></p>
+          <pre><code>
+struct net_device_ops {
+  int (*ndo_open)(struct net_device *dev);
+  int (*ndo_stop)(struct net_device *dev);
+  netdev_tx_t (*ndo_start_xmit)
+              (struct sk_buff *skb,
+               struct net_device *dev);
+  void (*ndo_set_rx_mode)(struct net_device *dev);
+};
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 3: TCP/IP Stack -->
+      <section>
+        <h2>TCP/IP Stack Deep Dive</h2>
+        <div class="example">
+          <p><strong>1. TCP State Machine:</strong></p>
+          <pre><code>
+struct tcp_sock {
+  struct inet_sock inet;
+  u16 tcp_header_len;
+  u16 xmit_size_goal_segs;
+  __u32 pred_flags;
+  
+  // Congestion control
+  u32 snd_cwnd;     // Congestion window
+  u32 snd_ssthresh; // Slow start threshold
+};
+
+// TCP States
+enum tcp_state {
+  TCP_ESTABLISHED = 1,
+  TCP_SYN_SENT,
+  TCP_SYN_RECV,
+  TCP_FIN_WAIT1,
+  TCP_FIN_WAIT2,
+  TCP_TIME_WAIT,
+  TCP_CLOSE,
+  TCP_CLOSE_WAIT,
+  TCP_LAST_ACK,
+  TCP_LISTEN,
+  TCP_CLOSING
+};
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 4: Network Namespaces -->
+      <section>
+        <h2>Network Namespaces và Container Networking</h2>
+        <div class="example">
+          <p><strong>1. Network Namespace Structure:</strong></p>
+          <pre><code>
+struct net {
+  struct list_head list;
+  struct list_head exit_list;
+  struct list_head net_namespace_list;
+  struct user_namespace *user_ns;
+  struct proc_dir_entry *proc_net;
+  struct sock *rtnl;
+};
+
+// Create new network namespace
+unshare(CLONE_NEWNET);
+          </code></pre>
+          <p><strong>2. Virtual Networking:</strong></p>
+          <pre><code>
+// Create veth pair
+ip link add veth0 type veth peer name veth1
+
+// Move to namespace
+ip link set veth1 netns container1
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 5: File System Implementation -->
+      <section>
+        <h2>File System Implementation</h2>
+        <div class="example">
+          <p><strong>1. VFS Objects:</strong></p>
+          <pre><code>
+struct inode {
+  umode_t i_mode;
+  uid_t i_uid;
+  gid_t i_gid;
+  const struct inode_operations *i_op;
+  const struct file_operations *i_fop;
+  struct super_block *i_sb;
+};
+
+struct file_operations {
+  ssize_t (*read) (struct file *, char __user *, 
+                   size_t, loff_t *);
+  ssize_t (*write) (struct file *, const char __user *, 
+                    size_t, loff_t *);
+  int (*mmap) (struct file *, struct vm_area_struct *);
+};
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 6: File System Internals -->
+      <section>
+        <h2>File System Internals</h2>
+        <div class="example">
+          <p><strong>1. Ext4 File System:</strong></p>
+          <pre><code>
+struct ext4_inode {
+  __le16 i_mode;    // File mode
+  __le16 i_uid;     // Owner Uid
+  __le32 i_size_lo; // Size in bytes
+  __le32 i_atime;   // Access time
+  __le32 i_ctime;   // Creation time
+  __le32 i_mtime;   // Modification time
+  __le32 i_blocks_lo; // Blocks count
+  __le32 i_flags;   // File flags
+  // ... more fields
+};
+
+// Extent Tree Structure
+struct ext4_extent_header {
+  __le16 eh_magic;  // Magic number
+  __le16 eh_entries; // Number of entries
+  __le16 eh_max;    // Maximum entries
+  __le16 eh_depth;  // Depth of tree
+  __le32 eh_generation;
+};
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 7: Device Driver Development -->
+      <section>
+        <h2>Device Driver Development</h2>
+        <div class="example">
+          <p><strong>1. Character Device Driver:</strong></p>
+          <pre><code>
+// Basic character device structure
+struct cdev {
+  struct kobject kobj;
+  struct module *owner;
+  const struct file_operations *ops;
+  struct list_head list;
+  dev_t dev;
+  unsigned int count;
+};
+
+// Driver initialization
+static int __init my_driver_init(void) {
+  int major = register_chrdev(0, "mydev", &fops);
+  if (major < 0) {
+      printk(KERN_ALERT "Failed to register");
+      return major;
+  }
+  return 0;
+}
+
+module_init(my_driver_init);
+module_exit(my_driver_exit);
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 8: Kernel Security -->
+      <section>
+        <h2>Kernel Security Mechanisms</h2>
+        <div class="example">
+          <p><strong>1. SELinux Implementation:</strong></p>
+          <pre><code>
+struct selinux_state {
+  bool disabled;
+  bool enforcing;
+  bool checkreqprot;
+  bool initialized;
+  bool policycap[__POLICYDB_CAPABILITY_MAX];
+};
+
+// Security hooks
+struct security_operations {
+  int (*bprm_check_security)(struct linux_binprm *bprm);
+  int (*bprm_set_security)(struct linux_binprm *bprm);
+  int (*inode_permission)(struct inode *inode, int mask);
+};
+          </code></pre>
+          <p><strong>2. LSM (Linux Security Modules):</strong></p>
+          <pre><code>
+// Register security module
+int register_security(struct security_operations *ops) {
+  if (security_ops != &dummy_security_ops)
+      return -EAGAIN;
+  security_ops = ops;
+  return 0;
+}
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 9: Performance Tuning -->
+      <section>
+        <h2>Kernel Performance Tuning</h2>
+        <div class="example">
+          <p><strong>1. sysctl Parameters:</strong></p>
+          <pre><code>
+// /proc/sys/kernel/
+vm.swappiness = 60
+net.core.wmem_max = 12582912
+net.core.rmem_max = 12582912
+
+// Performance Monitoring
+struct perf_event_attr {
+  __u32 type;
+  __u32 size;
+  __u64 config;
+  union {
+      __u64 sample_period;
+      __u64 sample_freq;
+  };
+  __u64 sample_type;
+  __u64 read_format;
+};
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 10: Debugging Techniques -->
+      <section>
+        <h2>Kernel Debugging</h2>
+        <div class="example">
+          <p><strong>1. KGDB Setup:</strong></p>
+          <pre><code>
+// Kernel command line
+console=ttyS0,115200 kgdboc=ttyS0,115200 kgdbwait
+
+// Breakpoint in code
+asm("int $3");  // Software breakpoint
+
+// ftrace usage
+trace_printk("Debug: value = %d\n", value);
+          </code></pre>
+          <p><strong>2. Kernel Oops Analysis:</strong></p>
+          <pre><code>
+[  123.456789] kernel: BUG: unable to handle kernel
+[  123.456790] IP: [<ffffffff81234567>] function+0x123/0x456
+[  123.456791] PGD 1234567 PUD 7654321 PMD 13579
+[  123.456792] Oops: 0002 [#1] SMP 
+[  123.456793] CPU: 2 PID: 1234 Comm: process Tainted: P
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 11: Advanced Topics -->
+      <section>
+        <h2>Advanced Kernel Features</h2>
+        <div class="example">
+          <p><strong>1. eBPF (Extended Berkeley Packet Filter):</strong></p>
+          <pre><code>
+// BPF Program Example
+SEC("kprobe/sys_execve")
+int bpf_prog(struct pt_regs *ctx) {
+  char comm[16];
+  bpf_get_current_comm(comm, sizeof(comm));
+  bpf_trace_printk("execve: %s\n", comm);
+  return 0;
+}
+          </code></pre>
+          <p><strong>2. Kernel Live Patching:</strong></p>
+          <pre><code>
+// Live patch module
+struct klp_func patch_funcs[] = {
+  {
+      .old_name = "old_function",
+      .new_func = new_function,
+  }, { }
+};
+
+struct klp_object patch_obj = {
+  .funcs = patch_funcs,
+};
+          </code></pre>
+        </div>
+      </section>
+
+      <!-- Slide 12: Real-time Linux -->
+      <section>
+        <h2>Real-time Linux Features</h2>
+        <div class="example">
+          <p><strong>1. PREEMPT_RT Patch:</strong></p>
+          <pre><code>
+// RT Priority Scheduling
+struct sched_param {
+  int sched_priority;
+};
+
+// RT Mutex implementation
+struct rt_mutex {
+  raw_spinlock_t wait_lock;
+  struct rb_root_cached waiters;
+  struct task_struct *owner;
+};
+          </code></pre>
+          <p><strong>2. High Resolution Timers:</strong></p>
+          <pre><code>
+struct hrtimer {
+  struct timerqueue_node node;
+  ktime_t _softexpires;
+  enum hrtimer_restart (*function)(struct hrtimer *);
+  struct hrtimer_clock_base *base;
+  u8 state;
+};
+          </code></pre>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      controls: true,
+      progress: true,
+      center: true,
+      hash: true
+    });
+  </script>
+</body>
+</html>
